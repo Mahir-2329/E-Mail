@@ -15,7 +15,7 @@ export async function GET() {
         autoStart: true, // Always auto-starts on server
         mode: 'interval',
         lastRun: intervalStatus.lastRun,
-        schedule: `Every ${process.env.CRON_INTERVAL_DAYS || 3} days at ${process.env.CRON_HOUR || 8}:${String(process.env.CRON_MINUTE || 0).padStart(2, '0')}`,
+        schedule: `Every ${process.env.CRON_INTERVAL_DAYS || 3} days at ${parseInt(process.env.CRON_HOUR || '8', 10)}:${String(parseInt(process.env.CRON_MINUTE || '0', 10)).padStart(2, '0')}`,
       });
     } else {
       const status = getCronStatus();

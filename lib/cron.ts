@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import { logCronExecution } from './cron-logger';
 
 let emailCronJob: cron.ScheduledTask | null = null;
 let currentSchedule: string = '';
@@ -26,6 +27,7 @@ export function startEmailCron(cronSchedule?: string) {
                   (typeof window === 'undefined' ? 'http://localhost:3000' : window.location.origin);
 
   emailCronJob = cron.schedule(schedule, async () => {
+    const startTime = Date.now();
     console.log(`[Cron] Running scheduled email job at ${new Date().toISOString()}`);
     
     try {
@@ -38,9 +40,31 @@ export function startEmailCron(cronSchedule?: string) {
       });
 
       const data = await response.json();
+      const executionTime = Date.now() - startTime;
       console.log(`[Cron] Email job completed:`, data);
+      
+      // Log successful execution
+      await logCronExecution({
+        status: data.success ? 'success' : 'failed',
+        emails_sent: data.sent || 0,
+        emails_failed: data.failed || 0,
+        error_message: data.success ? undefined : (data.error || 'Unknown error'),
+        execution_time_ms: executionTime,
+        cron_mode: 'standard',
+      });
     } catch (error: any) {
+      const executionTime = Date.now() - startTime;
       console.error(`[Cron] Email job failed:`, error.message);
+      
+      // Log failed execution
+      await logCronExecution({
+        status: 'failed',
+        emails_sent: 0,
+        emails_failed: 0,
+        error_message: error.message,
+        execution_time_ms: executionTime,
+        cron_mode: 'standard',
+      });
     }
   }, {
     scheduled: true,

@@ -14,6 +14,9 @@ export default function Home() {
   const [cronSchedule, setCronSchedule] = useState('37 0 */3 * *'); // Default: Every 3 days at 12:37 AM
   const [cronLoading, setCronLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [cronLogs, setCronLogs] = useState<any[] | null>(null);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
 
   // Load default schedule from env or use default
   useEffect(() => {
@@ -182,13 +185,35 @@ export default function Home() {
     }
   };
 
+  const handleViewLogs = async () => {
+    setLoadingLogs(true);
+    setShowLogs(true);
+    setCronLogs(null);
+
+    try {
+      const response = await fetch('/api/cron/logs');
+      const data = await response.json();
+      if (data.success) {
+        setCronLogs(data.logs);
+      } else {
+        setCronLogs([]);
+        alert(`Failed to load logs: ${data.error}`);
+      }
+    } catch (error: any) {
+      setCronLogs([]);
+      alert(`Error loading logs: ${error.message}`);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
   useEffect(() => {
     checkCronStatus();
   }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800 flex items-start sm:items-center justify-center p-3 sm:p-6 transition-colors duration-300">
-      <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6 md:p-10 w-full transition-all duration-300 ${viewData ? 'max-w-6xl' : 'max-w-lg'} mt-4 sm:mt-0`}>
+      <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4 sm:p-6 md:p-10 w-full transition-all duration-300 ${viewData || showLogs ? 'max-w-6xl' : 'max-w-lg'} mt-4 sm:mt-0`}>
         {/* Header with Dark Mode Toggle */}
         <div className="flex items-start justify-between mb-6 sm:mb-8">
           <div className="text-center flex-1">
@@ -404,6 +429,60 @@ export default function Home() {
               </span>
             )}
           </button>
+
+          <button
+            onClick={handleViewLogs}
+            disabled={loadingLogs}
+            className={`
+              px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm sm:text-base
+              transition-all duration-300 ease-out
+              ${loadingLogs
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500 active:scale-[0.98] shadow-sm hover:shadow-md'
+              }
+            `}
+          >
+            {loadingLogs ? (
+              <svg
+                className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">View Logs</span>
+                <span className="sm:hidden">Logs</span>
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Result Message */}
@@ -614,6 +693,143 @@ export default function Home() {
               <div className="text-red-600 dark:text-red-400 text-sm">
                 Error: {viewData.error}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Cron Logs Section */}
+        {showLogs && (
+          <div className="mt-4 sm:mt-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Cron Execution Logs
+              </h2>
+              <button
+                onClick={() => setShowLogs(false)}
+                className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                Close
+              </button>
+            </div>
+
+            {loadingLogs ? (
+              <div className="flex items-center justify-center py-8">
+                <svg
+                  className="animate-spin h-8 w-8 text-indigo-600 dark:text-indigo-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            ) : cronLogs && cronLogs.length > 0 ? (
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full text-xs sm:text-sm divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50/50 dark:bg-gray-900/50">
+                      <tr>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Executed At
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Status
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Emails Sent
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Emails Failed
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Execution Time
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Mode
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Error
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                      {cronLogs.map((log: any) => (
+                        <tr
+                          key={log.id}
+                          className="hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            {new Date(log.executed_at).toLocaleString()}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                log.status === 'success'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : log.status === 'failed'
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                              }`}
+                            >
+                              {log.status}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300">
+                            {log.emails_sent || 0}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300">
+                            {log.emails_failed || 0}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300">
+                            {log.execution_time_ms ? `${log.execution_time_ms}ms` : '-'}
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300">
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs">
+                              {log.cron_mode || '-'}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-gray-300 max-w-xs truncate">
+                            {log.error_message || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : cronLogs && cronLogs.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
+                No cron logs found yet. Logs will appear here after cron jobs execute.
+              </p>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
+                Click "View Logs" to load cron execution logs.
+              </p>
             )}
           </div>
         )}

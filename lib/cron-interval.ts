@@ -2,6 +2,7 @@
 // This runs the job, then schedules the next run N days later
 
 import { startEmailCron as startStandardCron } from './cron';
+import { logCronExecution } from './cron-logger';
 
 let intervalJob: NodeJS.Timeout | null = null;
 let lastRunDate: Date | null = null;
@@ -16,6 +17,7 @@ export function startIntervalCron(intervalDays: number = 3, hour: number = 8, mi
                   (typeof window === 'undefined' ? 'http://localhost:3000' : window.location.origin);
 
   const runEmailJob = async () => {
+    const startTime = Date.now();
     console.log(`[Interval Cron] Running email job at ${new Date().toISOString()}`);
     lastRunDate = new Date();
     
@@ -28,12 +30,35 @@ export function startIntervalCron(intervalDays: number = 3, hour: number = 8, mi
       });
 
       const data = await response.json();
+      const executionTime = Date.now() - startTime;
       console.log(`[Interval Cron] Email job completed:`, data);
+      
+      // Log successful execution
+      await logCronExecution({
+        status: data.success ? 'success' : 'failed',
+        emails_sent: data.sent || 0,
+        emails_failed: data.failed || 0,
+        error_message: data.success ? undefined : (data.error || 'Unknown error'),
+        execution_time_ms: executionTime,
+        cron_mode: 'interval',
+      });
       
       // Schedule next run
       scheduleNextRun(intervalDays, hour, minute);
     } catch (error: any) {
+      const executionTime = Date.now() - startTime;
       console.error(`[Interval Cron] Email job failed:`, error.message);
+      
+      // Log failed execution
+      await logCronExecution({
+        status: 'failed',
+        emails_sent: 0,
+        emails_failed: 0,
+        error_message: error.message,
+        execution_time_ms: executionTime,
+        cron_mode: 'interval',
+      });
+      
       // Retry in 1 hour if failed
       setTimeout(() => scheduleNextRun(intervalDays, hour, minute), 60 * 60 * 1000);
     }
