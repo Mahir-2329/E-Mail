@@ -11,7 +11,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [cronStatus, setCronStatus] = useState<any>(null);
-  const [cronSchedule, setCronSchedule] = useState('0 8 */3 * *'); // Default: Every 3 days at 8 AM
+  const [cronSchedule, setCronSchedule] = useState('37 0 */3 * *'); // Default: Every 3 days at 12:37 AM
   const [cronLoading, setCronLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -19,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     // In production, this would come from server-side, but for UI we use default
     // The actual schedule is controlled by CRON_SCHEDULE env variable
-    setCronSchedule('0 8 */3 * *');
+    setCronSchedule('37 0 */3 * *');
   }, []);
 
   // Initialize dark mode from localStorage or system preference
