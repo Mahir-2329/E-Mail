@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: 'Email Sender App',
   description: 'Send emails to pending recipients',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-512x512.png',
+    apple: '/icon-512x512.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -28,7 +32,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body suppressHydrationWarning>{children}</body>
