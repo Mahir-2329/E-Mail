@@ -1,0 +1,34 @@
+// Simple script to generate PWA icons
+// Run: node generate-icons.js
+// Requires: sharp (npm install sharp)
+
+const fs = require('fs');
+const path = require('path');
+
+// Create a simple SVG icon
+const svgIcon = `
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#grad)" rx="100"/>
+  <path d="M256 150 L256 200 M256 250 L256 300 M256 350 L256 362" stroke="white" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="256" cy="200" r="20" fill="white"/>
+  <path d="M150 256 L200 256 M250 256 L300 256 M350 256 L362 256" stroke="white" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="200" cy="256" r="20" fill="white"/>
+  <text x="256" y="400" font-family="Arial" font-size="80" fill="white" text-anchor="middle" font-weight="bold">E</text>
+</svg>
+`;
+
+// Write SVG
+fs.writeFileSync(path.join(__dirname, 'public', 'icon.svg'), svgIcon);
+
+console.log('✅ Created icon.svg');
+console.log('📝 Note: For production, convert icon.svg to PNG formats:');
+console.log('   - icon-192x192.png (192x192)');
+console.log('   - icon-512x512.png (512x512)');
+console.log('💡 You can use online tools like: https://realfavicongenerator.net/');
+console.log('   Or use ImageMagick: convert icon.svg -resize 192x192 icon-192x192.png');
