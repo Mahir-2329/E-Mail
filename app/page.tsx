@@ -94,8 +94,8 @@ export default function Home() {
     }
   };
 
-  const handleStatusUpdate = async (rowIndex: number, newStatus: string) => {
-    setUpdatingStatus(rowIndex);
+  const handleStatusUpdate = async (id: number, newStatus: string) => {
+    setUpdatingStatus(id);
 
     try {
       const response = await fetch('/api/update-status', {
@@ -104,7 +104,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          rowIndex,
+          id,
           newStatus,
         }),
       });
@@ -543,7 +543,7 @@ export default function Home() {
                             >
                               {key === 'Status' ? (
                                 <div className="flex items-center gap-2">
-                                  {updatingStatus === idx ? (
+                                  {updatingStatus === row.id ? (
                                     <div className="flex items-center gap-2">
                                       <svg
                                         className="animate-spin h-3 w-3 sm:h-4 sm:w-4 text-gray-400"
@@ -570,7 +570,7 @@ export default function Home() {
                                   ) : (
                                     <select
                                       value={row[key] || ''}
-                                      onChange={(e) => handleStatusUpdate(idx, e.target.value)}
+                                      onChange={(e) => handleStatusUpdate(row.id, e.target.value)}
                                       className={`
                                         px-1.5 sm:px-2 py-1 rounded text-xs font-medium border
                                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
