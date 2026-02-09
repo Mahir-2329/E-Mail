@@ -13,6 +13,7 @@ export default function Home() {
   const [cronStatus, setCronStatus] = useState<any>(null);
   const [cronSchedule, setCronSchedule] = useState('0 8 */3 * *'); // Default: Every 3 days at 8 AM
   const [cronLoading, setCronLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Load default schedule from env or use default
   useEffect(() => {
@@ -27,9 +28,9 @@ export default function Home() {
     const saved = localStorage.getItem('darkMode');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = saved !== null ? saved === 'true' : prefersDark;
-    
+
     setDarkMode(isDark);
-    
+
     if (isDark) {
       document.documentElement.classList.add('dark');
     } else {
@@ -41,7 +42,7 @@ export default function Home() {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     localStorage.setItem('darkMode', String(newDarkMode));
-    
+
     if (newDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -49,9 +50,10 @@ export default function Home() {
     }
   };
 
-  const handleSendEmails = async () => {
+  const executeSendEmails = async () => {
     setLoading(true);
     setResult(null);
+    setShowConfirmModal(false);
 
     try {
       const response = await fetch('/api/send-emails', {
@@ -68,6 +70,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendEmails = () => {
+    setShowConfirmModal(true);
   };
 
   const handleViewData = async () => {
@@ -90,7 +96,7 @@ export default function Home() {
 
   const handleStatusUpdate = async (rowIndex: number, newStatus: string) => {
     setUpdatingStatus(rowIndex);
-    
+
     try {
       const response = await fetch('/api/update-status', {
         method: 'POST',
@@ -104,7 +110,7 @@ export default function Home() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         await handleViewData();
       } else {
@@ -208,7 +214,7 @@ export default function Home() {
               Send emails to pending recipients
             </p>
           </div>
-          
+
           {/* Dark Mode Toggle */}
           {mounted && (
             <button
@@ -242,7 +248,7 @@ export default function Home() {
               Auto-Running
             </span>
           </div>
-          
+
           <div className="space-y-3">
             {cronStatus?.schedule && (
               <div className="p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
@@ -259,7 +265,7 @@ export default function Home() {
                 )}
               </div>
             )}
-            
+
             <div className="text-xs text-gray-600 dark:text-gray-400">
               <p className="mb-2">
                 ✅ <strong>Automatic:</strong> Cron job starts automatically when the server starts.
@@ -285,12 +291,12 @@ export default function Home() {
             onClick={handleSendEmails}
             disabled={loading}
             className={`
-              flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl font-medium text-white text-sm sm:text-base
+              w-[120px] py-2 sm:py-2.5 rounded-xl font-medium text-white text-sm sm:text-base
               transition-all duration-300 ease-out
-              ${
-                loading
-                  ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-[0.98] shadow-md hover:shadow-lg'
+              block
+              ${loading
+                ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-[0.98] shadow-md hover:shadow-lg'
               }
             `}
           >
@@ -345,10 +351,9 @@ export default function Home() {
             className={`
               px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm sm:text-base
               transition-all duration-300 ease-out
-              ${
-                loadingData
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500 active:scale-[0.98] shadow-sm hover:shadow-md'
+              ${loadingData
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500 active:scale-[0.98] shadow-sm hover:shadow-md'
               }
             `}
           >
@@ -407,10 +412,9 @@ export default function Home() {
             className={`
               mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl border backdrop-blur-sm
               transition-all duration-300
-              ${
-                result.success
-                  ? 'bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-200/50 dark:border-emerald-800/50'
-                  : 'bg-rose-50/80 dark:bg-rose-900/20 border-rose-200/50 dark:border-rose-800/50'
+              ${result.success
+                ? 'bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-200/50 dark:border-emerald-800/50'
+                : 'bg-rose-50/80 dark:bg-rose-900/20 border-rose-200/50 dark:border-rose-800/50'
               }
             `}
           >
@@ -450,16 +454,14 @@ export default function Home() {
               )}
               <div className="flex-1 min-w-0">
                 <h3
-                  className={`font-semibold text-xs sm:text-sm mb-1 sm:mb-1.5 ${
-                    result.success ? 'text-emerald-900 dark:text-emerald-300' : 'text-rose-900 dark:text-rose-300'
-                  }`}
+                  className={`font-semibold text-xs sm:text-sm mb-1 sm:mb-1.5 ${result.success ? 'text-emerald-900 dark:text-emerald-300' : 'text-rose-900 dark:text-rose-300'
+                    }`}
                 >
                   {result.success ? 'Success' : 'Error'}
                 </h3>
                 <p
-                  className={`text-xs sm:text-sm mb-2 sm:mb-3 ${
-                    result.success ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
-                  }`}
+                  className={`text-xs sm:text-sm mb-2 sm:mb-3 ${result.success ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
+                    }`}
                 >
                   {result.message || result.error}
                 </p>
@@ -573,11 +575,11 @@ export default function Home() {
                                         px-1.5 sm:px-2 py-1 rounded text-xs font-medium border
                                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                                         transition-colors cursor-pointer
-                                        ${row[key] === 'Pending' 
-                                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' 
+                                        ${row[key] === 'Pending'
+                                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700'
                                           : row[key] === 'Sent'
-                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700'
-                                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700'
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                                         }
                                       `}
                                     >
@@ -616,6 +618,41 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700 transform transition-all">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
+                <svg className="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Confirm Send
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to send emails to all pending recipients? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeSendEmails}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg shadow-indigo-500/30"
+                >
+                  Confirm Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
