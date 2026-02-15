@@ -108,7 +108,11 @@ LinkedIn: https://www.linkedin.com/in/mahir-pansuriya/
             text: body,
           });
 
-          // STRICT: Update nothing on recipient. Just log.
+          // Update last_contacted_at to show activity, but keep status 'Pending'
+          await client.query(
+            'UPDATE recipients SET last_contacted_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [row.id]
+          );
 
           // Log success
           await client.query(

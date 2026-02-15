@@ -81,10 +81,17 @@ export default function Home() {
 
   const handleViewData = async () => {
     setLoadingData(true);
-    setViewData(null);
+    // Don't clear viewData completely to allow smooth update
+    // setViewData(null);
 
     try {
-      const response = await fetch('/api/view-data');
+      const response = await fetch('/api/view-data', {
+        cache: 'no-store', // Ensure we always get fresh data
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       setViewData(data);
     } catch (error: any) {
@@ -662,11 +669,11 @@ export default function Home() {
                                         }
                                       `}
                                     >
-                                      <option value="Pending">Pending</option>
-                                      <option value="Sent">Sent</option>
-                                      <option value="Rejected">Rejected</option>
-                                      <option value="Interview">Interview</option>
-                                      <option value="Follow Up">Follow Up</option>
+                                      <option value="Pending" style={{ color: 'black' }}>Pending</option>
+                                      <option value="Sent" style={{ color: 'black' }}>Sent</option>
+                                      <option value="Rejected" style={{ color: 'black' }}>Rejected</option>
+                                      <option value="Interview" style={{ color: 'black' }}>Interview</option>
+                                      <option value="Follow Up" style={{ color: 'black' }}>Follow Up</option>
                                     </select>
                                   )}
                                 </div>
@@ -788,13 +795,12 @@ export default function Home() {
                           </td>
                           <td className="px-2 sm:px-4 py-2 sm:py-3">
                             <span
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                log.status === 'success'
-                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                  : log.status === 'failed'
+                              className={`px-2 py-1 rounded text-xs font-medium ${log.status === 'success'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : log.status === 'failed'
                                   ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                   : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                              }`}
+                                }`}
                             >
                               {log.status}
                             </span>
