@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+import { getCronStatus } from '@/lib/cron';
 import { getIntervalCronStatus } from '@/lib/cron-interval';
 
 export const dynamic = 'force-dynamic';
