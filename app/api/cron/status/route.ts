@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getCronStatus } from '@/lib/cron';
 import { getIntervalCronStatus } from '@/lib/cron-interval';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     // Check which mode is active
     const useInterval = process.env.CRON_INTERVAL_MODE === 'true';
-    
+
     if (useInterval) {
       const intervalStatus = getIntervalCronStatus();
       return NextResponse.json({

@@ -65,6 +65,11 @@ export default function Home() {
 
       const data = await response.json();
       setResult(data);
+
+      if (data.success) {
+        // Refresh data to show new columns/status
+        await handleViewData();
+      }
     } catch (error: any) {
       setResult({
         success: false,
@@ -198,7 +203,13 @@ export default function Home() {
     setCronLogs(null);
 
     try {
-      const response = await fetch('/api/cron/logs');
+      const response = await fetch('/api/cron/logs', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       if (data.success) {
         setCronLogs(data.logs);
